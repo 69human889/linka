@@ -1,16 +1,18 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from neomodel.contrib import SemiStructuredNode
+from neomodel import NodeSet
 # Create your views here.
-from .models import get_node
+from .models import Role
 def test(request):
-    Node = get_node('Role')
-    # node = Node(title='ali2')
-    # node.save()
     
+    # node = Role(title='ali')
+    # node.save()
+    nodes :NodeSet= Role.nodes
+    node = nodes.get(uid='9e1213282343459c80986cdaf4a7cc4f')
     d = {}
-    for p in Node.nodes.all():
-        p :SemiStructuredNode= p
-        d[p.element_id]= p.labels()
-        
+    # for p in nodes:
+    #     p :SemiStructuredNode= p
+    #     d[p.uid]= p.element_id_property
+    d[node.uid] = node.__properties__['title']
     return JsonResponse(d)

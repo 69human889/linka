@@ -1,0 +1,6 @@
+django>=5.0,<6.0
+django-neomodel>=0.0.9
+neomodel>=5.3.3
+neo4j-driver>=5.21
+python-dotenv>=1.0
+

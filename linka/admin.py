@@ -14,8 +14,9 @@ from .models import (
 
 def get_all_fields(model):
 
-    fields = [field.name for field in model._meta.get_fields() if field.many_to_many != True and field.one_to_many != True and field.name != 'id']
-    return ['__str__']+fields
+    fields = [field.name for field in model._meta.get_fields() if field.many_to_many != True and field.one_to_many != True]
+    return fields
+    # return ['__str__']+fields
 
 
 
@@ -23,7 +24,9 @@ def get_all_fields(model):
 @admin.register(PersonModel)
 class PersonAdmin(admin.ModelAdmin):
     list_display = get_all_fields(PersonModel)
+    list_display_links = list_display
     search_fields = ['first_name','last_name']
+    autocomplete_fields = ['phone_numbers']
 
 @admin.register(RoleModel)
 class RoleAdmin(admin.ModelAdmin):
@@ -35,30 +38,35 @@ class RoleAdmin(admin.ModelAdmin):
 @admin.register(BaseModel)
 class BaseAdmin(admin.ModelAdmin):
     list_display = get_all_fields(BaseModel)
+    list_display_links = list_display
     search_fields = []
-    autocomplete_fields = []
+    autocomplete_fields = ['people']
     
 @admin.register(FileModel)
 class FileAdmin(admin.ModelAdmin):
     list_display = get_all_fields(FileModel)
+    list_display_links = list_display
     search_fields = []
-    autocomplete_fields = []
+    autocomplete_fields = ['person']
 
 @admin.register(EmailModel)
 class EmailAdmin(admin.ModelAdmin):
     list_display = get_all_fields(EmailModel)
+    list_display_links = list_display
     search_fields = []
-    autocomplete_fields = []
+    autocomplete_fields = ['person']
 
 @admin.register(ImageModel)
 class ImageAdmin(admin.ModelAdmin):
     list_display = get_all_fields(ImageModel)
+    list_display_links = list_display
     search_fields = []
-    autocomplete_fields = []
+    autocomplete_fields = ['person']
 
 @admin.register(AcountIdModel)
 class AccountAdmin(admin.ModelAdmin):
     list_display = get_all_fields(AcountIdModel)
+    list_display_links = list_display
     search_fields = []
     autocomplete_fields = []
 
@@ -66,5 +74,6 @@ class AccountAdmin(admin.ModelAdmin):
 @admin.register(PhoneNumberModel)
 class PhoneNumberAdmin(admin.ModelAdmin):
     list_display = get_all_fields(PhoneNumberModel)
-    search_fields = []
+    list_display_links = list_display
+    search_fields = ['number']
     autocomplete_fields = []

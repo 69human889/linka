@@ -5,7 +5,7 @@ from datetime import datetime
 
 class BaseModel(models.Model):
     name = models.CharField(max_length=128,unique=True,verbose_name='نام پایگاه')
-    poeple = models.ManyToManyField('PersonModel',verbose_name='افراد')
+    people = models.ManyToManyField('PersonModel',verbose_name='افراد')
     class Meta:
         verbose_name = 'پایگاه'
         verbose_name_plural = 'پایگاه ها'

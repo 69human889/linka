@@ -9,11 +9,8 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-import os
-from pathlib import Path
-from dotenv import load_dotenv
 
-load_dotenv()
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -23,12 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-#(qvwm%n*v9yd&yustz(^kn84mwl@(7ue+gd8e!_&v1*n@xah9'
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', SECRET_KEY)
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
+SECRET_KEY = 'django-insecure-!caqf9y8yom#wo3_^(p=t413u-kq&+$mx_f&=$z=a_!ko61(^8'
 
-ALLOWED_HOSTS = os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')
+# SECURITY WARNING: don't run with debug turned on in production!
+DEBUG = True
+
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -40,8 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'django_neomodel',
-    'crud',
+    'linka',
 ]
 
 MIDDLEWARE = [
@@ -84,9 +80,6 @@ DATABASES = {
     }
 }
 
-NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL', 'bolt://neo4j:12341234@localhost:7687')
-NEOMODEL_SIGNALS = True
-NEOMODEL_FORCE_TIMEZONE = True
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -110,7 +103,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fa-ir'
 
 TIME_ZONE = 'UTC'
 

@@ -1,6 +1,7 @@
 from django.apps import AppConfig
 
 
-class CrudConfig(AppConfig):
+class LinkaConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'crud'
+    name = 'linka'
+    verbose_name = 'لینکا'

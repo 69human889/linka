@@ -1,6 +1,10 @@
 import os
-from django.db import models
 from datetime import datetime
+# 
+from django.db import models
+from neomodel import db
+
+
 # Create your models here.
 
 class BaseModel(models.Model):
@@ -12,16 +16,83 @@ class BaseModel(models.Model):
 
     def __str__(self):
         return self.name
+    @classmethod
+    def to_neo4j(cls):
+        for obj in cls.objects.values():
+            db.cypher_query(
+                'MERGE (b:Base {name:$name})',obj
+            )
+        for base in cls.objects.prefetch_related('people'):
+            for person in base.people.values():
+                db.cypher_query(
+                    'MATCH (b:Base {name:$base_name})'
+                    'MATCH (p:Person {id:$person_id})'
+                    'MERGE (b)-[:BASE_PERSON]-(p)'
+                    ,{
+                        'base_name':base.name,
+                        'person_id':person['id']
+                    }
+                )
 
 class RoleModel(models.Model):
     role_name = models.CharField(max_length=128,unique=True,verbose_name='نام جایگاه')
     parent = models.ForeignKey('self',on_delete=models.CASCADE,null=True,blank=True,verbose_name='جایگاه بالادستی')
-    role_person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,verbose_name='فرد')
+    role_person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,null=True,blank=True,verbose_name='فرد')
     class Meta:
         verbose_name = 'جایگاه'
         verbose_name_plural = 'جایگاه ها'
     def __str__(self):
         return self.role_name
+
+    @classmethod
+    def to_neo4j(cls):
+        for obj in cls.objects.prefetch_related('parent','role_person'):
+            if obj.parent and obj.role_person:
+                db.cypher_query(
+                    'MERGE(r:Role {role_name:$role_name})'
+                    'WITH r '
+                    'MATCH(r2:Role {role_name:$role_parent_name})'
+                    'MATCH(p:Person {id:person_id})'
+                    'MERGE(r2)-[:ROLE_PARENT]-(r)'
+                    'MERGE(r)-[:ROLE_PERSON]-(p)'
+                    ,{
+                        'role_name':obj.role_name,
+                        'role_parent_name':obj.parent.role_name,
+                        'person_id':obj.role_person.id
+                    }
+                    
+                )
+            elif obj.parent and not obj.role_person:
+                db.cypher_query(
+                    'MERGE(r:Role {role_name:$role_name})'
+                    'WITH r '
+                    'MATCH(r2:Role {role_name:$role_parent_name})'
+                    'MERGE(r2)-[:ROLE_PARENT]-(r)'
+                    ,{
+                        'role_name':obj.role_name,
+                        'role_parent_name':obj.parent.role_name
+                    }
+                    
+                )
+            elif not obj.parent and obj.role_person:
+                db.cypher_query(
+                    'MERGE(r:Role {role_name:$role_name})'
+                    'WITH r '
+                    'MATCH(p:Person {id:$person_id})'
+                    'MERGE(r)-[:ROLE_PERSON]-(p)'
+                    ,{
+                        'role_name':obj.role_name,
+                        'person_id':obj.role_person.id
+                    }
+                    
+                )
+            else:
+                db.cypher_query(
+                    'MERGE(r:Role {role_name:$role_name})'
+                    ,{
+                        'role_name':obj.role_name
+                    } 
+                )
 
 class PhoneNumberModel(models.Model):
     number = models.CharField(max_length=32,unique=True,verbose_name='شماره')
@@ -31,7 +102,13 @@ class PhoneNumberModel(models.Model):
         verbose_name_plural = 'شماره های تماس'
     def __str__(self):
         return f'{self.number}|{self.country_code}+'
-
+    @classmethod
+    def to_neo4j(cls):
+        for obj in cls.objects.values():
+            db.cypher_query(
+                'MERGE (pn:PhoneNumber {number:$number,country_code:$country_code}) return pn;',obj
+            )
+        
 class EmailModel(models.Model):
     email_address = models.EmailField(unique=True,verbose_name='آدرس ایمیل')
     person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,verbose_name='فرد')
@@ -40,6 +117,20 @@ class EmailModel(models.Model):
         verbose_name_plural = 'ایمیل ها'
     def __str__(self):
         return self.email_address
+
+    @classmethod
+    def to_neo4j(cls):
+        for obj in cls.objects.prefetch_related('person'):
+            db.cypher_query(
+                'MERGE (e:Email {email_address:$email_address})'
+                'WITH e '
+                'MATCH (p:Person {id:$person_id})'
+                'MERGE (p)-[:PERSON_EMAIL]-(e)'
+                ,{
+                    'email_address':obj.email_address,
+                    'person_id':obj.person.id
+                }
+            )
 
 class PlatformsChoice(models.TextChoices):
     FACEBOOK = 'facebook', 'Facebook'
@@ -51,6 +142,7 @@ class PlatformsChoice(models.TextChoices):
     OTHER = 'other', 'Other'
 
 class AcountIdModel(models.Model):
+    person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,verbose_name='فرد')
     platform = models.CharField(max_length=64,choices=PlatformsChoice.choices,verbose_name='نام پلتفرم')
     account_id = models.CharField(max_length=128,verbose_name='آیدی حساب کاربری')
     class Meta:
@@ -60,13 +152,30 @@ class AcountIdModel(models.Model):
 
     def __str__(self):
         return f'{self.account_id} ({self.platform})'
+    
+    @classmethod
+    def to_neo4j(cls):
+        for obj in cls.objects.prefetch_related('person'):
+            db.cypher_query(
+                'MERGE (a:Account {platform:$platform,account_id:$account_id})'
+                'WITH a '
+                'MATCH (p:Person {id:$person_id})'
+                'MERGE (p)-[:PERSON_ACCOUNT]-(a)'
+                ,{
+                    'platform':obj.platform,
+                    'account_id':obj.account_id,
+                    'person_id':obj.person.id
+                }
+            )
+
+    
 
 class GenderChoise(models.TextChoices):
     MALE = 'm','آقا'
     FEMALE = 'f','خانم'
     OTHER = 'o','سایر'
 
-class EducationLevel(models.TextChoices):
+class EducationLevelChoise(models.TextChoices):
     NONE = 'none', 'بدون تحصیلات رسمی'
     PRIMARY = 'primary', 'ابتدایی'
     SECONDARY = 'secondary', 'متوسط اول'
@@ -84,7 +193,7 @@ class PersonModel(models.Model):
     hebrew_last_name = models.CharField(max_length=128,null=True,blank=True,verbose_name='نام خانوادگی عبری')
     gender = models.CharField(max_length=10,choices=GenderChoise.choices,null=True,blank=True,verbose_name='جنسیت')
     phone_numbers = models.ManyToManyField(PhoneNumberModel,blank=True,verbose_name='شماره ها')
-    education = models.CharField(max_length=20,choices=EducationLevel.choices,null=True,blank=True,verbose_name='تحصیلات')
+    education = models.CharField(max_length=20,choices=EducationLevelChoise.choices,null=True,blank=True,verbose_name='تحصیلات')
     institution = models.CharField(max_length=128,null=True,blank=True,verbose_name='موسسه')
     unit = models.CharField(max_length=128,null=True,blank=True,verbose_name='واحد')
     adddress = models.CharField(max_length=128,null=True,blank=True,verbose_name='آدرس')
@@ -104,7 +213,30 @@ class PersonModel(models.Model):
 
     def __str__(self):
         return self.first_name+' '+self.last_name
+    @classmethod
+    def to_neo4j(cls):
+        for obj in cls.objects.values():
+            update_keys = ' , '.join([f'p.{key}=${key}' for key,value in obj.items() if key !='id' and value])
+            db.cypher_query(
+                'MERGE (p:Person {id:$id}) '
+                f' ON CREATE SET {update_keys}'
+                f' ON MATCH SET {update_keys}'
+                ,obj
+            )
+        for person in cls.objects.prefetch_related("phone_numbers"):
+            for phonenumber in person.phone_numbers.values():
+                parames = {
+                    'person_id':person.id,
+                    'phone_number' : phonenumber['number']
+                }
+                db.cypher_query(
+                    'match(p:Person {id:$person_id})'
+                    'match(pn:PhoneNumber {number:$phone_number})'
+                    'merge (p)-[:PERSON_PHONENUMBER]-(pn)'
+                    ,parames
+                )
 
+            
 
 def update_image_path(instance,filename):
     name,ext = os.path.splitext(os.path.basename(filename))

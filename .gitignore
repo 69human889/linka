@@ -1,2 +1,5 @@
 archive/
 db.sqlite3
+linka/migrations/
+config/__pycache__
+linka/__pycache__

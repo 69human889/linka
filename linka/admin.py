@@ -68,7 +68,7 @@ class AccountAdmin(admin.ModelAdmin):
     list_display = get_all_fields(AcountIdModel)
     list_display_links = list_display
     search_fields = []
-    autocomplete_fields = []
+    autocomplete_fields = ['person']
 
 
 @admin.register(PhoneNumberModel)

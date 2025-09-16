@@ -1,0 +1,6 @@
+Django
+Pillow
+whitenoise
+django_neomodel
+mssql-django
+django-cors-headers

@@ -1,6 +1,7 @@
 import os
 from datetime import datetime
 # 
+from django.core.exceptions import ValidationError
 from django.db import models
 from neomodel import db
 
@@ -8,8 +9,14 @@ from neomodel import db
 # Create your models here.
 
 class BaseModel(models.Model):
-    name = models.CharField(max_length=128,unique=True,verbose_name='نام پایگاه')
+    name = models.CharField(max_length=128,unique=True,verbose_name='نام مکان')
     people = models.ManyToManyField('PersonModel',verbose_name='افراد')
+    latitude = models.FloatField(verbose_name='lat')
+    longtitude = models.FloatField(verbose_name='long')
+    base_type = models.CharField(max_length=128,verbose_name='نوع مکان')
+    address = models.TextField(verbose_name='آدرس')
+    postal_code = models.CharField(max_length=64,verbose_name='کد پستی')
+
     class Meta:
         verbose_name = 'پایگاه'
         verbose_name_plural = 'پایگاه ها'
@@ -37,7 +44,7 @@ class BaseModel(models.Model):
 class RoleModel(models.Model):
     role_name = models.CharField(max_length=128,unique=True,verbose_name='نام جایگاه')
     parent = models.ForeignKey('self',on_delete=models.CASCADE,null=True,blank=True,verbose_name='جایگاه بالادستی')
-    role_person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,null=True,blank=True,verbose_name='فرد')
+    role_person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,null=True,blank=True,verbose_name='نفر فعلی')
     class Meta:
         verbose_name = 'جایگاه'
         verbose_name_plural = 'جایگاه ها'
@@ -212,7 +219,7 @@ class PersonModel(models.Model):
         verbose_name_plural = 'افراد'
 
     def __str__(self):
-        return self.first_name+' '+self.last_name
+        return f'{self.id}-{self.first_name}-{self.last_name}'
     @classmethod
     def to_neo4j(cls):
         for obj in cls.objects.values():
@@ -236,7 +243,22 @@ class PersonModel(models.Model):
                     ,parames
                 )
 
-            
+class PeopleRelationshipModel(models.Model):
+    person_A = models.ForeignKey(PersonModel,on_delete=models.CASCADE,verbose_name='طرف اول',related_name="+")
+    person_B = models.ForeignKey(PersonModel,on_delete=models.CASCADE, verbose_name='طرف دوم',related_name="+")
+    rel_type = models.CharField(max_length=64,verbose_name='نوع رابطه')
+    duration = models.CharField(max_length=64,verbose_name='مدت زمان')
+    class Meta:
+        unique_together = ('person_A', 'person_B')
+        verbose_name = 'رابطه افراد'
+        verbose_name_plural = 'رابطه های افراد'
+
+    def __str__(self):
+        return f'({self.person_A})-[{self.rel_type}]->{self.person_B}' 
+    def clean(self):
+        if self.person_A == self.person_B:
+            raise ValidationError("A person cannot have a relationship with themselves.")
+
 
 def update_image_path(instance,filename):
     name,ext = os.path.splitext(os.path.basename(filename))

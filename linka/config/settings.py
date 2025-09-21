@@ -82,28 +82,28 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL', 'bolt://neo4j:12341234@neo4j:7687/linka')
+NEOMODEL_NEO4J_BOLT_URL = os.environ.get('NEO4J_BOLT_URL', 'bolt://neo4j:12341234@localhost:7687/linka')
 NEOMODEL_SIGNALS = True
 NEOMODEL_FORCE_TIMEZONE = False
 NEOMODEL_MAX_CONNECTION_POOL_SIZE = 50
 
 DATABASES = {
-    "default": {   # SQL Server (default DB for Django ORM)
-        "ENGINE": "mssql",
-        "NAME": os.getenv("SQLSERVER_DB", "mydb"),
-        "USER": os.getenv("SQLSERVER_USER", "sa"),
-        "PASSWORD": os.getenv("SQLSERVER_PASSWORD", "YourPassword123!"),
-        "HOST": os.getenv("SQLSERVER_HOST", "sqlserver"),
-        "PORT": os.getenv("SQLSERVER_PORT", "1433"),
-        "OPTIONS": {
-            "driver": "ODBC Driver 18 for SQL Server",
-            "extra_params": "TrustServerCertificate=yes;"
-        }
-    }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'database' / 'db.sqlite3',
+    # "default": {   # SQL Server (default DB for Django ORM)
+    #     "ENGINE": "mssql",
+    #     "NAME": os.getenv("SQLSERVER_DB", "mydb"),
+    #     "USER": os.getenv("SQLSERVER_USER", "sa"),
+    #     "PASSWORD": os.getenv("SQLSERVER_PASSWORD", "YourPassword123!"),
+    #     "HOST": os.getenv("SQLSERVER_HOST", "sqlserver"),
+    #     "PORT": os.getenv("SQLSERVER_PORT", "1433"),
+    #     "OPTIONS": {
+    #         "driver": "ODBC Driver 18 for SQL Server",
+    #         "extra_params": "TrustServerCertificate=yes;"
+    #     }
     # }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'database' / 'db.sqlite3',
+    }
 }
 
 # Password validation

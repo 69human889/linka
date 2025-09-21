@@ -8,12 +8,12 @@ from .models import (
     EmailModel,
     ImageModel,
     AcountIdModel,
-    PhoneNumberModel
+    PhoneNumberModel,
+    PeopleRelationshipModel
 )
 
 
 def get_all_fields(model):
-
     fields = [field.name for field in model._meta.get_fields() if field.many_to_many != True and field.one_to_many != True]
     return fields
     # return ['__str__']+fields
@@ -25,7 +25,7 @@ def get_all_fields(model):
 class PersonAdmin(admin.ModelAdmin):
     list_display = get_all_fields(PersonModel)
     list_display_links = list_display
-    search_fields = ['first_name','last_name']
+    search_fields = ['id','first_name','last_name']
     autocomplete_fields = ['phone_numbers']
 
 @admin.register(RoleModel)
@@ -77,3 +77,12 @@ class PhoneNumberAdmin(admin.ModelAdmin):
     list_display_links = list_display
     search_fields = ['number']
     autocomplete_fields = []
+
+
+
+@admin.register(PeopleRelationshipModel)
+class PeopleRelationshipAdmin(admin.ModelAdmin):
+    list_display = get_all_fields(PeopleRelationshipModel)
+    list_display_links = list_display
+    search_fields = []
+    autocomplete_fields = ['person_A','person_B']

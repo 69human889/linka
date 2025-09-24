@@ -1,68 +1,8 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Linka-Home</title>
-    <link href="{% static 'dist/css/bootstrap.min.css' %}" rel="stylesheet">
-    <script src="{% static 'dist/js/bootstrap.bundle.min.js' %}"></script>
-    <style>
-        body {
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-        }
-        .sidebar {
-            width: 220px;
-            background-color: #f8f9fa;
-            padding-top: 1rem;
-            border-right: 1px solid #ddd;
-        }
-        .main {
-            flex-grow: 1;
-            padding: 1.5rem;
-            overflow-y: auto;
-        }
-        .header {
-            border-bottom: 1px solid #ddd;
-            padding: 0.75rem 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-    </style>
-</head>
-<body>
+{% extends  "shared/_MainLayout.html" %}
 
-    <!-- Sidebar -->
-    <div class="sidebar d-flex flex-column">
-        <h5 class="text-center">Navigation</h5>
-        <div class="m-3">
-        <a href="{% url 'linka:home' %}" class="nav-link text-success">Dashboard</a>
-        {% if user.is_staff %}<a href="{% url 'admin:index' %}" class="nav-link mt-2 text-danger">Forms</a> {% endif %}
-        <!-- <a href="#" class="nav-link">Settings</a> -->
-        </div>
-        
-    </div>
 
-    <!-- Main Content -->
-    <div class="main">
-        <!-- Header -->
-        <div class="header">
-            <h4>Dashboard</h4>
-            <div>
-                <span class="me-3">Hello, {{ user.username }}</span>
-
-                <form action="{% url 'logout' %}" method="post">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-sm btn-outline-danger">Logout</button>
-                </form>
-                
-            </div>
-        </div>
-
-        <!-- Board -->
-        <div class="mt-4">
+{% block content %}
+<div class="mt-4">
             {% comment %} <h5>API Actions</h5> {% endcomment %}
             <div class="d-flex gap-3 flex-wrap">
                 <button class="btn btn-outline-primary" onclick="callApi('/to_neo4j', 'Data successfully transfered to neo4j.')">Move To Neo4j</button>
@@ -71,62 +11,4 @@
                 {% endcomment %}
             </div> 
         </div>
-    </div>
-
-    <!-- Toast Notification -->
-    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
-        <div id="toast" class="toast align-items-center text-bg-success border-0" role="alert">
-            <div class="d-flex">
-                <div class="toast-body" id="toast-body">
-                    Success!
-                </div>
-                <button type="button" class="btn-close btn-close-white me-2 m-auto"
-                        data-bs-dismiss="toast"></button>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        async function callApi(endpoint, successMessage) {
-            try {
-                let response = await fetch(endpoint, {
-                    method: "POST",
-                    headers: {
-                        "X-CSRFToken": "{{ csrf_token }}",
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({})
-                });
-
-                if (response.ok) {
-                    showToast(successMessage);
-                } else {
-                    showToast("Something went wrong!"+response.text(), true);
-                    //showToast(`HTTP error! Status: ${response.status}`, true);
-                    
-                }
-            } catch (error) {
-                showToast("Error: " + error, true);
-            }
-        }
-
-        function showToast(message, isError = false) {
-            let toastEl = document.getElementById("toast");
-            let toastBody = document.getElementById("toast-body");
-
-            toastBody.innerText = message;
-
-            if (isError) {
-                toastEl.classList.remove("text-bg-success");
-                toastEl.classList.add("text-bg-danger");
-            } else {
-                toastEl.classList.remove("text-bg-danger");
-                toastEl.classList.add("text-bg-success");
-            }
-
-            let toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
-    </script>
-</body>
-</html>
+{% endblock content %}

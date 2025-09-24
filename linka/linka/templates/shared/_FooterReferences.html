@@ -1,0 +1,43 @@
+{% load static %}
+<script src="{% static 'dist/js/bootstrap.bundle.min.js' %}"></script>
+<script>
+    function showToast(message, isError = false) {
+            let toastEl = document.getElementById("toast");
+            let toastBody = document.getElementById("toast-body");
+
+            toastBody.innerText = message;
+
+            if (isError) {
+                toastEl.classList.remove("text-bg-success");
+                toastEl.classList.add("text-bg-danger");
+            } else {
+                toastEl.classList.remove("text-bg-danger");
+                toastEl.classList.add("text-bg-success");
+            }
+
+            let toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+    async function callApi(endpoint, successMessage) {
+        try {
+            let response = await fetch(endpoint, {
+                method: "POST",
+                headers: {
+                    "X-CSRFToken": "{{ csrf_token }}",
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({})
+            });
+
+            if (response.ok) {
+                showToast(successMessage);
+            } else {
+                showToast("Something went wrong!"+response.text(), true);
+                //showToast(`HTTP error! Status: ${response.status}`, true);
+                
+            }
+        } catch (error) {
+            showToast("Error: " + error, true);
+        }
+    }
+</script>

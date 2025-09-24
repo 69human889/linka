@@ -1,0 +1,27 @@
+{% load static %}
+<link href="{% static 'dist/css/bootstrap.min.css' %}" rel="stylesheet">
+<style>
+        body {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .sidebar {
+            width: 220px;
+            background-color: #f8f9fa;
+            padding-top: 1rem;
+            border-right: 1px solid #ddd;
+        }
+        .main {
+            flex-grow: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+        .header {
+            border-bottom: 1px solid #ddd;
+            padding: 0.75rem 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+</style>

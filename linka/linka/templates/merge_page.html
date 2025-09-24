@@ -1,0 +1,56 @@
+{% extends "shared/_MainLayout.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow-lg border-0 rounded-3">
+        <div class="card-header bg-primary text-white text-center">
+          <h4 class="mb-0">Merge Records</h4>
+        </div>
+        <div class="card-body p-4">
+          <form method="post" action="{% url 'linka:merge_records' %}" enctype='multipart/form-data'>
+            {% csrf_token %}
+            
+            <div class="mb-3">
+              <label for="record_keep" class="form-label fw-bold">
+                Select Record to <span class="text-success">Keep</span>
+              </label>
+              <select class="form-select" id="record_keep" name="record_keep" required>
+                <option value="" disabled selected>-- Choose Record --</option>
+                {% for record in records %}
+                  <option value="{{ record.id }}">{{ record }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-text text-muted">This record will remain after merge.</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="record_merge" class="form-label fw-bold">
+                Select Record to <span class="text-danger">Merge (Remove)</span>
+              </label>
+              <select class="form-select" id="record_merge" name="record_merge" required>
+                <option value="" disabled selected>-- Choose Record --</option>
+                {% for record in records %}
+                  <option value="{{ record.id }}">{{ record }}</option>
+                {% endfor %}
+              </select>
+              <div class="form-text text-muted">This record will be merged into the one above and then deleted.</div>
+            </div>
+
+            <div class="alert alert-warning mt-4" role="alert">
+              ⚠️ Once merged, the second record will be permanently removed. This action cannot be undone.
+            </div>
+
+            <div class="d-flex justify-content-between">
+              <a href="" class="btn btn-secondary">Cancel</a>
+              <button type="submit" class="btn btn-danger">Merge Records</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

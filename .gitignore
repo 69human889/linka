@@ -1,4 +1,5 @@
-linka/archive/
+linka/archive
+linka/archive/*
 linka/database
 linka/linka/migrations/
 linka/config/__pycache__

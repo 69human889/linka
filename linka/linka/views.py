@@ -1,6 +1,6 @@
 import json
 # 
-from django.contrib.auth.decorators import login_required,
+from django.contrib.auth.decorators import login_required,user_passes_test
 from django.contrib import messages
 from django.db import transaction
 from django.db.models import ManyToManyField
@@ -17,7 +17,7 @@ def home_page(request):
         'head_name':'Dashboard'
     }
     return render(request,'home_page.html',context=context)
-
+@user_passes_test(lambda u: u.is_superuser,login_url='admin:index')
 def merge_people_page(request):
     records = models.PersonModel.objects.all()
     context = {
@@ -26,9 +26,9 @@ def merge_people_page(request):
         'records':records
     }
     return render(request,'merge_page.html',context=context)
-
-
+@user_passes_test(lambda u: u.is_superuser,login_url='admin:index')
 def merge_two_records(request):
+
     if request.method == "POST":
         remain_record_id = request.POST.get('record_keep')
         remove_record_id = request.POST.get('record_merge')
@@ -49,9 +49,11 @@ def merge_two_records(request):
             return redirect('linka:merge_page')
 
         with transaction.atomic():
+            # -----------------------------
+            # 1. Handle reverse relations
+            # -----------------------------
             for related in remain_record._meta.related_objects:
                 rel_manager = getattr(remove_record, related.get_accessor_name())
-
                 # OneToOneField
                 if related.one_to_one:
                     try:
@@ -70,14 +72,24 @@ def merge_two_records(request):
                 # ForeignKey (one-to-many)
                 else:
                     rel_manager.update(**{related.field.name: remain_record})
-
+            # -----------------------------
+            # 2. Handle direct ManyToMany fields on the model
+            # -----------------------------
+            for m2m_field in remove_record._meta.many_to_many:
+                old_m2m_manager = getattr(remove_record, m2m_field.name)
+                new_m2m_manager = getattr(remain_record, m2m_field.name)
+                
+                # Transfer all related objects
+                new_m2m_manager.add(*old_m2m_manager.all())
+                
+                # Clear old object
+                old_m2m_manager.clear()
             # Delete duplicate
             remove_record.delete()
 
         messages.success(request, "Records merged successfully.")
 
     return redirect('linka:merge_page')
-
 
 @login_required
 def to_neo4j(request):

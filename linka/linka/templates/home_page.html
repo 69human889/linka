@@ -2,13 +2,22 @@
 
 
 {% block content %}
-<div class="mt-4">
+<div class="row mt-4">
             {% comment %} <h5>API Actions</h5> {% endcomment %}
-            <div class="d-flex gap-3 flex-wrap">
+            <div class="col-3 d-flex gap-3 flex-wrap">
                 <button class="btn btn-outline-primary" onclick="callApi('/to_neo4j', 'Data successfully transfered to neo4j.')">Move To Neo4j</button>
-                {% comment %} <button class="btn btn-success" onclick="callApi('api/action2/', 'Action 2 completed!')">Action 2</button>
+                <a href="{% url 'linka:export' %}" class="btn btn-outline-success text">Export Data</a>
+                {% comment %} 
                 <button class="btn btn-warning" onclick="callApi('api/action3/', 'Action 3 completed!')">Action 3</button>
                 {% endcomment %}
             </div> 
-        </div>
+
+            <div class="col-6 d-flex gap-3 flex-wrap">
+                <form method="post" enctype="multipart/form-data" class="mt-3">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="btn btn-primary">Import</button>
+                </form>
+            </div> 
+</div>
 {% endblock content %}

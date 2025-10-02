@@ -9,7 +9,8 @@ from .models import (
     ImageModel,
     AcountIdModel,
     PhoneNumberModel,
-    PeopleRelationshipModel
+    PeopleRelationshipModel,
+    PeopleRoleModel
 )
 
 
@@ -86,3 +87,10 @@ class PeopleRelationshipAdmin(admin.ModelAdmin):
     list_display_links = list_display
     search_fields = []
     autocomplete_fields = ['person_A','person_B']
+
+@admin.register(PeopleRoleModel)
+class PeopleRoleAdmin(admin.ModelAdmin):
+    list_display = get_all_fields(PeopleRoleModel)
+    list_display_links = list_display
+    search_fields = []
+    autocomplete_fields = ['person','role']

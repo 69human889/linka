@@ -103,6 +103,7 @@ def merge_people_page(request):
         'records':records
     }
     return render(request,'merge_page.html',context=context)
+
 @user_passes_test(lambda u: u.is_superuser,login_url='admin:index')
 def merge_two_records(request):
     if request.method != "POST":
@@ -134,6 +135,81 @@ def merge_two_records(request):
         messages.error(request, f"An error occurred while merging: {str(e)}")
 
     return redirect('linka:merge_page')
+
+def load_test(request):
+    import csv
+    person_mapper = {}
+    role_mapper = {}
+    with open('/mnt/hgfs/sharefolder/people.csv','r',encoding='utf-8-sig') as file:
+        for record in csv.DictReader(file):
+            record = {k:v or None for k,v in record.items()}
+            person = models.PersonModel()
+            person.first_name = record['first_name']
+            person.last_name = record['last_name']
+            person.hebrew_first_name = record['hebrew_first_name']
+            person.hebrew_last_name = record['hebrew_last_name']
+            person.gender = record['gender'].lower()[0] if record['gender'] else None
+            person.education = record['uni_education']
+            person.institution = record['educational_institution']
+            person.military_job = record['military_job']
+            person.job = record['job']
+            person.mother_name = record['mother_name']
+            person.marital_status= record['marital_status']
+            person.address = record['address']
+            person.description = record['personal_and_professional_traits']
+            person.save()
+            person_mapper[record['id']] = person.pk
+            if record['facebook']:
+                try:
+                    facebook = models.AcountIdModel()
+                    facebook.person = person
+                    facebook.account_id = record['facebook']
+                    facebook.platform = 'facebook'
+                    facebook.save()
+                except:
+                    pass
+            if record['instagram_id']:
+                try:
+                    insta = models.AcountIdModel()
+                    insta.account_id = record['instagram_id']
+                    insta.platform='instagram'
+                    insta.person = person
+                    insta.save()
+                except:
+                    pass
+    with open('/mnt/hgfs/sharefolder/rel_people.csv','r',encoding='utf-8-sig') as file:
+        for record in csv.DictReader(file):
+            record = {k:v or None for k,v in record.items()}
+            rel_people = models.PeopleRelationshipModel()
+            rel_people.person_A = models.PersonModel.objects.get(id=person_mapper.get(record['person_A']))
+            rel_people.person_B = models.PersonModel.objects.get(id=person_mapper.get(record['person_B']))
+            rel_people.rel_type = record['relation_type']
+            rel_people.duration = record['duration']
+            rel_people.save()
+    with open('/mnt/hgfs/sharefolder/roles.csv','r',encoding='utf-8-sig') as file:
+        for record in csv.DictReader(file):
+            record = {k:v or None for k,v in record.items()}
+            role = models.RoleModel()
+            role.role_name = record['role_name']
+            if record['parent_role_id']:
+                role.parent = models.RoleModel.objects.get(id=role_mapper[record['parent_role_id']])
+            role.save()
+            role_mapper[record['role_id']]=role.pk
+    print(person_mapper,role_mapper)
+    with open('/mnt/hgfs/sharefolder/rel_people_roles.csv','r',encoding='utf-8-sig') as file:
+        for record in csv.DictReader(file):
+            record = {k:v or None for k,v in record.items()}
+            if not record['role_id'] or not record['person_id'] or int(record['role_id']or 0) > 159:
+                continue
+            rel_person_rol = models.PeopleRoleModel()
+            rel_person_rol.role = models.RoleModel.objects.get(id=role_mapper[record['role_id']])
+            rel_person_rol.person = models.PersonModel.objects.get(id=person_mapper[record['person_id']])
+            rel_person_rol.start_date = record['start_date']
+            rel_person_rol.end_date = record['end_date']
+            rel_person_rol.save()
+
+
+    return redirect('linka:home')
 
 
 # The merge_records function from earlier
@@ -246,6 +322,7 @@ def import_linka_data(request):
         form = ImportDataForm()
 
     return render(request, "linka/import_page.html", {"form": form})
+
 @login_required
 def to_neo4j(request):
     if not request.user.is_staff:

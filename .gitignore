@@ -1,6 +1,6 @@
 linka/archive
 linka/archive/*
-linka/database
+linka/database/db.sqlite3
 linka/linka/migrations/
 linka/config/__pycache__
 linka/linka/__pycache__

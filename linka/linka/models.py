@@ -42,10 +42,11 @@ class BaseModel(models.Model):
                 )
 
 class RoleModel(models.Model):
-    role_name = models.CharField(max_length=128,unique=True,verbose_name='نام جایگاه')
+    role_name = models.CharField(max_length=128,verbose_name='نام جایگاه')
     parent = models.ForeignKey('self',on_delete=models.CASCADE,null=True,blank=True,verbose_name='جایگاه بالادستی')
     role_person = models.ForeignKey('PersonModel',on_delete=models.DO_NOTHING,null=True,blank=True,verbose_name='نفر فعلی')
     class Meta:
+        unique_together = ('role_name','parent')
         verbose_name = 'جایگاه'
         verbose_name_plural = 'جایگاه ها'
     def __str__(self):
@@ -103,7 +104,7 @@ class RoleModel(models.Model):
 
 class PhoneNumberModel(models.Model):
     number = models.CharField(max_length=32,unique=True,verbose_name='شماره')
-    country_code = models.IntegerField(verbose_name='کد کشور')
+    country_code = models.IntegerField(null=True,blank=True,verbose_name='کد کشور')
     class Meta:
         verbose_name = 'شماره تماس'
         verbose_name_plural = 'شماره های تماس'
@@ -182,16 +183,16 @@ class GenderChoise(models.TextChoices):
     FEMALE = 'f','خانم'
     OTHER = 'o','سایر'
 
-class EducationLevelChoise(models.TextChoices):
-    NONE = 'none', 'بدون تحصیلات رسمی'
-    PRIMARY = 'primary', 'ابتدایی'
-    SECONDARY = 'secondary', 'متوسط اول'
-    HIGH_SCHOOL = 'high_school', 'متوسط دوم'
-    DIPLOMA = 'diploma', 'دیپلم'
-    BACHELORS = 'bachelor', 'کارشناسی'
-    MASTERS = 'master', 'کارشناسی ارشد'
-    DOCTORATE = 'doctorate', 'دکتری'
-    OTHER = 'other', 'سایر'
+# class EducationLevelChoise(models.TextChoices):
+#     NONE = 'none', 'بدون تحصیلات رسمی'
+#     PRIMARY = 'primary', 'ابتدایی'
+#     SECONDARY = 'secondary', 'متوسط اول'
+#     HIGH_SCHOOL = 'high_school', 'متوسط دوم'
+#     DIPLOMA = 'diploma', 'دیپلم'
+#     BACHELORS = 'bachelor', 'کارشناسی'
+#     MASTERS = 'master', 'کارشناسی ارشد'
+#     DOCTORATE = 'doctorate', 'دکتری'
+#     OTHER = 'other', 'سایر'
 
 class PersonModel(models.Model):
     first_name = models.CharField(max_length=128,null=True,blank=True,verbose_name='نام')
@@ -200,11 +201,11 @@ class PersonModel(models.Model):
     hebrew_last_name = models.CharField(max_length=128,null=True,blank=True,verbose_name='نام خانوادگی عبری')
     gender = models.CharField(max_length=10,choices=GenderChoise.choices,null=True,blank=True,verbose_name='جنسیت')
     phone_numbers = models.ManyToManyField(PhoneNumberModel,blank=True,verbose_name='شماره ها')
-    education = models.CharField(max_length=20,choices=EducationLevelChoise.choices,null=True,blank=True,verbose_name='تحصیلات')
+    education = models.CharField(max_length=20,null=True,blank=True,verbose_name='تحصیلات')
     institution = models.CharField(max_length=128,null=True,blank=True,verbose_name='موسسه')
     unit = models.CharField(max_length=128,null=True,blank=True,verbose_name='واحد')
-    adddress = models.CharField(max_length=128,null=True,blank=True,verbose_name='آدرس')
-    martial_status = models.CharField(max_length=128,null=True,blank=True,verbose_name='وضعیت رزمی')
+    address = models.CharField(max_length=128,null=True,blank=True,verbose_name='آدرس')
+    marital_status = models.CharField(max_length=128,null=True,blank=True,verbose_name='وضعیت تعهل')
     birth_date = models.DateField(null=True,blank=True,verbose_name='تاریخ تولد')
     place_of_birth = models.CharField(max_length=128,null=True,blank=True,verbose_name='محل تولد')
     father_name = models.CharField(max_length=128,null=True,blank=True,verbose_name='نام پدر')
@@ -214,7 +215,7 @@ class PersonModel(models.Model):
     description = models.TextField(null=True,blank=True,verbose_name='سایر توضیحات')
 
     class Meta:
-        unique_together = ('first_name', 'last_name')
+        # unique_together = ('first_name', 'last_name')
         verbose_name = 'فرد'
         verbose_name_plural = 'افراد'
 
@@ -246,10 +247,10 @@ class PersonModel(models.Model):
 class PeopleRelationshipModel(models.Model):
     person_A = models.ForeignKey(PersonModel,on_delete=models.CASCADE,verbose_name='طرف اول',related_name="+")
     person_B = models.ForeignKey(PersonModel,on_delete=models.CASCADE, verbose_name='طرف دوم',related_name="+")
-    rel_type = models.CharField(max_length=64,verbose_name='نوع رابطه')
-    duration = models.CharField(max_length=64,verbose_name='مدت زمان')
+    rel_type = models.CharField(max_length=64,null=True,blank=True,verbose_name='نوع رابطه')
+    duration = models.CharField(max_length=64,null=True,blank=True,verbose_name='مدت زمان')
     class Meta:
-        unique_together = ('person_A', 'person_B')
+        # unique_together = ('person_A', 'person_B')
         verbose_name = 'رابطه افراد'
         verbose_name_plural = 'رابطه های افراد'
 
@@ -259,6 +260,15 @@ class PeopleRelationshipModel(models.Model):
         if self.person_A == self.person_B:
             raise ValidationError("A person cannot have a relationship with themselves.")
 
+
+class PeopleRoleModel(models.Model):
+    person = models.ForeignKey(PersonModel,on_delete=models.CASCADE,verbose_name='نفر')
+    role = models.ForeignKey(RoleModel,on_delete=models.CASCADE,verbose_name='جایگاه')
+    start_date = models.DateField(null=True,blank=True,verbose_name='تاریخ شروع')
+    end_date = models.DateField(null=True,blank=True,verbose_name='تاریخ اتمام')
+    class Meta:
+        verbose_name = 'سوابق جایگاه'
+        verbose_name_plural = 'سوابق جایگاه ها'
 
 def update_image_path(instance,filename):
     name,ext = os.path.splitext(os.path.basename(filename))
@@ -286,3 +296,4 @@ class FileModel(models.Model):
         verbose_name_plural = 'فایل ها'
     def __str__(self):
         return self.file.path
+    
